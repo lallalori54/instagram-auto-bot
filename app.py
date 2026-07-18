@@ -5,7 +5,7 @@ import time
 import logging
 import random
 from instagrapi import Client
-from instagrapi.exceptions import LoginRequired
+from instagrapi.exceptions import LoginRequired, ClientError
 import re
 from datetime import datetime
 import threading
@@ -33,7 +33,8 @@ def get_username_from_cookie(settings):
     try:
         cl = Client()
         cl.set_settings(settings)
-        cl.get_user_id()  # Ye call zaroori hai session validate karne ke liye
+        # Login karne ki zaroorat nahi, session restore ho jata hai
+        cl.login('', '')  # Dummy login to initialize
         return cl.username
     except Exception as e:
         logger.error(f"Error getting username: {e}")
@@ -44,7 +45,8 @@ def test_session(settings):
     try:
         cl = Client()
         cl.set_settings(settings)
-        cl.get_user_id()
+        cl.login('', '')  # Dummy login to restore session
+        cl.get_timeline_feed()  # Check if session works
         return True
     except Exception as e:
         logger.error(f"Session test failed: {e}")
@@ -55,7 +57,7 @@ def post_video_to_account(settings, video_path, caption):
     try:
         cl = Client()
         cl.set_settings(settings)
-        cl.get_user_id()
+        cl.login('', '')  # Restore session
         result = cl.clip_upload(video_path, caption)
         return True, "Success"
     except Exception as e:
@@ -66,7 +68,7 @@ def post_story_to_account(settings, video_path):
     try:
         cl = Client()
         cl.set_settings(settings)
-        cl.get_user_id()
+        cl.login('', '')  # Restore session
         result = cl.video_upload_to_story(video_path)
         return True, "Success"
     except Exception as e:
@@ -525,8 +527,8 @@ def add_account():
         # Test session and get username
         cl = Client()
         cl.set_settings(cookie_dict)
-        cl.get_user_id()  # Important: Ye call session validate karta hai
-        username = cl.username  # Ab username attribute se lo
+        cl.login('', '')  # Dummy login to restore session
+        username = cl.username  # Username attribute se lo
         
         # Check duplicate
         if any(acc.get('username') == username for acc in accounts):
@@ -612,7 +614,7 @@ def post_random_video():
             try:
                 cl = Client()
                 cl.set_settings(acc['settings'])
-                cl.get_user_id()
+                cl.login('', '')
                 result = cl.clip_upload(video_path, daily_caption)
                 success_count += 1
                 global posts_today
@@ -621,7 +623,7 @@ def post_random_video():
             except Exception as e:
                 failed.append(f"@{acc['username']}: {str(e)[:30]}")
                 logger.error(f"❌ Failed on @{acc['username']}: {e}")
-            time.sleep(30)  # Delay to avoid rate limit
+            time.sleep(30)
         
         message = f"✅ Posted '{video['filename']}' on {success_count}/{len(active)} accounts"
         if failed:
@@ -649,7 +651,7 @@ def post_random_story():
             try:
                 cl = Client()
                 cl.set_settings(acc['settings'])
-                cl.get_user_id()
+                cl.login('', '')
                 result = cl.video_upload_to_story(video_path)
                 success_count += 1
                 logger.info(f"✅ Story posted on @{acc['username']}")
@@ -738,7 +740,7 @@ def scheduler_loop():
                                 try:
                                     cl = Client()
                                     cl.set_settings(acc['settings'])
-                                    cl.get_user_id()
+                                    cl.login('', '')
                                     cl.clip_upload(video_path, daily_caption)
                                     posts_today += 1
                                     logger.info(f"✅ Scheduled post on @{acc['username']}")
@@ -750,7 +752,7 @@ def scheduler_loop():
                                 try:
                                     cl = Client()
                                     cl.set_settings(acc['settings'])
-                                    cl.get_user_id()
+                                    cl.login('', '')
                                     cl.video_upload_to_story(video_path)
                                     logger.info(f"✅ Scheduled story on @{acc['username']}")
                                 except Exception as e:
@@ -765,7 +767,7 @@ def scheduler_loop():
         except Exception as e:
             logger.error(f"Scheduler loop error: {e}")
         
-        time.sleep(30)  # Check every 30 seconds
+        time.sleep(30)
 
 # Start scheduler thread
 scheduler_thread = threading.Thread(target=scheduler_loop, daemon=True)
