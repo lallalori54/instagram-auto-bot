@@ -1,15 +1,14 @@
-from flask import Flask, request, render_template_string, jsonify, session, redirect, url_for
+from flask import Flask, request, render_template_string, jsonify, session, redirect, url_for, send_from_directory
 import os
 import json
 import time
 import logging
 import random
 from instagrapi import Client
-from instagrapi.exceptions import LoginRequired, ClientError
+from instagrapi.exceptions import LoginRequired
 import re
 from datetime import datetime
-import tempfile
-import shutil
+import threading
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'admin-secret-key-2026')
@@ -21,15 +20,59 @@ ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin123')
 
 # ==================== IN-MEMORY STORAGE ====================
-accounts = []  # List of {username, settings, valid}
-uploaded_videos = []  # List of {filename, path, url, upload_time}
-scheduled_jobs = []  # List of {video_file, caption, accounts, time, status}
+accounts = []
+uploaded_videos = []
+scheduled_jobs = []
 daily_caption = "🎬 New video! Follow for more #instagram #trending"
-last_caption_update = datetime.now().date()
 posts_today = 0
 post_date = datetime.now().date()
 
-# ==================== HTML TEMPLATE ====================
+# ==================== HELPER FUNCTIONS ====================
+def get_username_from_cookie(settings):
+    """Get username from cookie settings"""
+    try:
+        cl = Client()
+        cl.set_settings(settings)
+        cl.get_user_id()  # Ye call zaroori hai session validate karne ke liye
+        return cl.username
+    except Exception as e:
+        logger.error(f"Error getting username: {e}")
+        return None
+
+def test_session(settings):
+    """Test if session is valid"""
+    try:
+        cl = Client()
+        cl.set_settings(settings)
+        cl.get_user_id()
+        return True
+    except Exception as e:
+        logger.error(f"Session test failed: {e}")
+        return False
+
+def post_video_to_account(settings, video_path, caption):
+    """Post video to single account"""
+    try:
+        cl = Client()
+        cl.set_settings(settings)
+        cl.get_user_id()
+        result = cl.clip_upload(video_path, caption)
+        return True, "Success"
+    except Exception as e:
+        return False, str(e)
+
+def post_story_to_account(settings, video_path):
+    """Post story to single account"""
+    try:
+        cl = Client()
+        cl.set_settings(settings)
+        cl.get_user_id()
+        result = cl.video_upload_to_story(video_path)
+        return True, "Success"
+    except Exception as e:
+        return False, str(e)
+
+# ==================== HTML TEMPLATES ====================
 LOGIN_HTML = """
 <!DOCTYPE html>
 <html>
@@ -455,23 +498,37 @@ def update_caption():
 
 @app.route('/add_account', methods=['POST'])
 def add_account():
+    global accounts
     try:
         data = request.json.get('cookie_data')
+        
+        # Parse cookie data
         if isinstance(data, str):
-            cookie_dict = json.loads(data)
+            try:
+                cookie_dict = json.loads(data)
+            except json.JSONDecodeError:
+                # Try to extract using regex
+                cookie_dict = {}
+                for key in ['sessionid', 'csrftoken', 'ds_user_id']:
+                    match = re.search(f'"{key}"\\s*:\\s*"([^"]+)"', data)
+                    if match:
+                        cookie_dict[key] = match.group(1)
         else:
             cookie_dict = data
         
+        # Validate required fields
         required = ['sessionid', 'csrftoken', 'ds_user_id']
-        missing = [k for k in required if k not in cookie_dict]
+        missing = [k for k in required if k not in cookie_dict or not cookie_dict[k]]
         if missing:
             return jsonify({'status': 'error', 'message': f'Missing: {", ".join(missing)}'})
         
-        # Test session
+        # Test session and get username
         cl = Client()
         cl.set_settings(cookie_dict)
-        username = cl.get_username()
+        cl.get_user_id()  # Important: Ye call session validate karta hai
+        username = cl.username  # Ab username attribute se lo
         
+        # Check duplicate
         if any(acc.get('username') == username for acc in accounts):
             return jsonify({'status': 'error', 'message': f'Account @{username} already added'})
         
@@ -480,15 +537,20 @@ def add_account():
             'settings': cookie_dict,
             'valid': True
         })
-        return jsonify({'status': 'success', 'message': f'Account @{username} added!'})
+        
+        logger.info(f"✅ Added account: @{username}")
+        return jsonify({'status': 'success', 'message': f'Account @{username} added successfully!'})
+    
     except Exception as e:
+        logger.error(f"Error adding account: {e}")
         return jsonify({'status': 'error', 'message': str(e)})
 
 @app.route('/remove_account', methods=['POST'])
 def remove_account():
     global accounts
     username = request.json.get('username')
-    accounts = [a for a in accounts if a.get('username') != username]
+    accounts = [acc for acc in accounts if acc.get('username') != username]
+    logger.info(f"Removed account: @{username}")
     return jsonify({'status': 'success', 'message': f'Removed @{username}'})
 
 @app.route('/upload_video', methods=['POST'])
@@ -496,17 +558,12 @@ def upload_video():
     try:
         if 'video' not in request.files:
             return jsonify({'status': 'error', 'message': 'No video file'})
+        
         file = request.files['video']
         if file.filename == '':
             return jsonify({'status': 'error', 'message': 'No file selected'})
         
-        # Save to temp
-        import tempfile
-        import shutil
-        import os
-        from datetime import datetime
-        
-        # Create uploads directory if not exists
+        # Create uploads directory
         os.makedirs('uploads', exist_ok=True)
         
         # Save file
@@ -520,15 +577,17 @@ def upload_video():
             'filename': filename,
             'path': filepath,
             'upload_time': datetime.now().strftime('%H:%M'),
-            'url': f"/uploads/{filename}"  # Local URL
+            'url': f"/uploads/{filename}"
         })
         
+        logger.info(f"📤 Video uploaded: {filename}")
         return jsonify({
             'status': 'success',
             'message': f'Video uploaded: {filename}',
             'url': f"/uploads/{filename}"
         })
     except Exception as e:
+        logger.error(f"Upload error: {e}")
         return jsonify({'status': 'error', 'message': str(e)})
 
 @app.route('/post_random_video', methods=['POST'])
@@ -554,19 +613,22 @@ def post_random_video():
                 cl = Client()
                 cl.set_settings(acc['settings'])
                 cl.get_user_id()
-                cl.clip_upload(video_path, daily_caption)
+                result = cl.clip_upload(video_path, daily_caption)
                 success_count += 1
                 global posts_today
                 posts_today += 1
+                logger.info(f"✅ Posted on @{acc['username']}")
             except Exception as e:
                 failed.append(f"@{acc['username']}: {str(e)[:30]}")
-            time.sleep(30)
+                logger.error(f"❌ Failed on @{acc['username']}: {e}")
+            time.sleep(30)  # Delay to avoid rate limit
         
         message = f"✅ Posted '{video['filename']}' on {success_count}/{len(active)} accounts"
         if failed:
             message += f" | Failed: {', '.join(failed)}"
         return jsonify({'status': 'success', 'message': message})
     except Exception as e:
+        logger.error(f"Post error: {e}")
         return jsonify({'status': 'error', 'message': str(e)})
 
 @app.route('/post_random_story', methods=['POST'])
@@ -588,10 +650,11 @@ def post_random_story():
                 cl = Client()
                 cl.set_settings(acc['settings'])
                 cl.get_user_id()
-                cl.video_upload_to_story(video_path)
+                result = cl.video_upload_to_story(video_path)
                 success_count += 1
+                logger.info(f"✅ Story posted on @{acc['username']}")
             except Exception as e:
-                pass
+                logger.error(f"❌ Story failed on @{acc['username']}: {e}")
             time.sleep(30)
         
         return jsonify({'status': 'success', 'message': f'Story posted on {success_count}/{len(active)} accounts'})
@@ -603,6 +666,7 @@ def schedule_post():
     try:
         time_str = request.json.get('time')
         post_type = request.json.get('type', 'video')
+        
         if not time_str:
             return jsonify({'status': 'error', 'message': 'Time required'})
         
@@ -611,6 +675,8 @@ def schedule_post():
             'type': post_type,
             'status': 'pending'
         })
+        
+        logger.info(f"📅 Scheduled {post_type} at {time_str}")
         return jsonify({'status': 'success', 'message': f'Scheduled at {time_str} ({post_type})'})
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)})
@@ -620,25 +686,20 @@ def remove_job():
     try:
         index = int(request.json.get('index', -1))
         if 0 <= index < len(scheduled_jobs):
-            scheduled_jobs.pop(index)
+            removed = scheduled_jobs.pop(index)
             return jsonify({'status': 'success', 'message': 'Job removed'})
         return jsonify({'status': 'error', 'message': 'Job not found'})
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)})
 
 # ==================== SERVE UPLOADS ====================
-from flask import send_from_directory
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory('uploads', filename)
 
-# ==================== SCHEDULED TASK (Run every minute) ====================
-import threading
-import time
-from datetime import datetime
-
+# ==================== SCHEDULER THREAD ====================
 def scheduler_loop():
-    """Background thread that checks scheduled jobs every minute"""
+    """Background thread that checks scheduled jobs every 30 seconds"""
     global posts_today, post_date
     while True:
         try:
@@ -655,46 +716,61 @@ def scheduler_loop():
             for job in scheduled_jobs[:]:
                 if job['time'] == current_time and job['status'] == 'pending':
                     job['status'] = 'running'
+                    logger.info(f"⏰ Running scheduled job: {job['type']} at {current_time}")
                     
-                    # Post random video or story
-                    if job['type'] == 'video':
-                        # Run post function
+                    try:
                         active = [a for a in accounts if a.get('valid', False)]
-                        if active and uploaded_videos:
-                            video = random.choice(uploaded_videos)
+                        if not active:
+                            logger.warning("No active accounts for scheduled job")
+                            job['status'] = 'failed'
+                            continue
+                        
+                        if not uploaded_videos:
+                            logger.warning("No videos uploaded for scheduled job")
+                            job['status'] = 'failed'
+                            continue
+                        
+                        video = random.choice(uploaded_videos)
+                        video_path = video['path']
+                        
+                        if job['type'] == 'video':
                             for acc in active:
                                 try:
                                     cl = Client()
                                     cl.set_settings(acc['settings'])
                                     cl.get_user_id()
-                                    cl.clip_upload(video['path'], daily_caption)
+                                    cl.clip_upload(video_path, daily_caption)
                                     posts_today += 1
+                                    logger.info(f"✅ Scheduled post on @{acc['username']}")
                                 except Exception as e:
-                                    pass
+                                    logger.error(f"❌ Scheduled post failed on @{acc['username']}: {e}")
                                 time.sleep(30)
-                    elif job['type'] == 'story':
-                        active = [a for a in accounts if a.get('valid', False)]
-                        if active and uploaded_videos:
-                            video = random.choice(uploaded_videos)
+                        elif job['type'] == 'story':
                             for acc in active:
                                 try:
                                     cl = Client()
                                     cl.set_settings(acc['settings'])
                                     cl.get_user_id()
-                                    cl.video_upload_to_story(video['path'])
+                                    cl.video_upload_to_story(video_path)
+                                    logger.info(f"✅ Scheduled story on @{acc['username']}")
                                 except Exception as e:
-                                    pass
+                                    logger.error(f"❌ Scheduled story failed on @{acc['username']}: {e}")
                                 time.sleep(30)
-                    
-                    job['status'] = 'completed'
+                        
+                        job['status'] = 'completed'
+                        logger.info(f"✅ Scheduled job completed")
+                    except Exception as e:
+                        logger.error(f"Scheduled job error: {e}")
+                        job['status'] = 'failed'
         except Exception as e:
-            logger.error(f"Scheduler error: {e}")
+            logger.error(f"Scheduler loop error: {e}")
         
         time.sleep(30)  # Check every 30 seconds
 
 # Start scheduler thread
-thread = threading.Thread(target=scheduler_loop, daemon=True)
-thread.start()
+scheduler_thread = threading.Thread(target=scheduler_loop, daemon=True)
+scheduler_thread.start()
+logger.info("🚀 Scheduler thread started")
 
 # ==================== RUN ====================
 if __name__ == '__main__':
