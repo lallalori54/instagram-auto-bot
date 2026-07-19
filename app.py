@@ -24,23 +24,26 @@ daily_caption = "🎬 New video! Follow for more #instagram #trending"
 posts_today = 0
 post_date = datetime.now().date()
 
-# ==================== INSTAGRAM UI (TopFollow Style) ====================
+# ============================================================
+# 1. REAL INSTAGRAM LOGIN UI (Exactly Instagram Web Jaisa)
+# ============================================================
 LOGIN_PAGE = """
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AutoPost - Instagram</title>
+    <title>Instagram</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            min-height: 100vh;
+            background: #fafafa;
             display: flex;
             justify-content: center;
             align-items: center;
+            min-height: 100vh;
+            margin: 0;
             padding: 20px;
         }
         .container {
@@ -77,7 +80,6 @@ LOGIN_PAGE = """
             border-radius: 8px;
             padding: 40px 30px 30px;
             margin-bottom: 10px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
         }
         .logo {
             text-align: center;
@@ -100,7 +102,6 @@ LOGIN_PAGE = """
             font-size: 12px;
             outline: none;
             height: 36px;
-            transition: border 0.2s;
         }
         .input-group input:focus {
             border-color: #a8a8a8;
@@ -118,7 +119,6 @@ LOGIN_PAGE = """
             cursor: pointer;
             margin-top: 8px;
             height: 32px;
-            transition: background 0.2s;
         }
         .login-btn:hover {
             background: #1877f2;
@@ -155,6 +155,10 @@ LOGIN_PAGE = """
             text-decoration: none;
             margin: 8px 0;
         }
+        .facebook-login svg {
+            width: 20px;
+            height: 20px;
+        }
         .forgot-password {
             color: #00376b;
             font-size: 12px;
@@ -170,7 +174,6 @@ LOGIN_PAGE = """
             padding: 20px 30px;
             text-align: center;
             font-size: 14px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
         }
         .signup-box a {
             color: #0095f6;
@@ -267,7 +270,7 @@ LOGIN_PAGE = """
                 </div>
 
                 <a href="#" class="facebook-login">
-                    <svg viewBox="0 0 20 20" width="20" height="20"><path d="M20 10c0-5.5-4.5-10-10-10S0 4.5 0 10c0 5 3.7 9.1 8.4 9.9v-7H5.9V10h2.5V7.8c0-2.5 1.5-3.8 3.7-3.8 1.1 0 2.2.2 2.2.2v2.5h-1.2c-1.2 0-1.6.8-1.6 1.6V10h2.8l-.4 2.9h-2.4v7C16.3 19.1 20 15 20 10z" fill="#1877f2"/></svg>
+                    <svg viewBox="0 0 20 20"><path d="M20 10c0-5.5-4.5-10-10-10S0 4.5 0 10c0 5 3.7 9.1 8.4 9.9v-7H5.9V10h2.5V7.8c0-2.5 1.5-3.8 3.7-3.8 1.1 0 2.2.2 2.2.2v2.5h-1.2c-1.2 0-1.6.8-1.6 1.6V10h2.8l-.4 2.9h-2.4v7C16.3 19.1 20 15 20 10z" fill="#1877f2"/></svg>
                     Log in with Facebook
                 </a>
                 <a href="#" class="forgot-password">Forgot password?</a>
@@ -304,7 +307,9 @@ document.getElementById('loginBtn').addEventListener('click', function() {
 </html>
 """
 
-# ==================== ADMIN DASHBOARD ====================
+# ============================================================
+# 2. ADMIN DASHBOARD
+# ============================================================
 ADMIN_HTML = """
 <!DOCTYPE html>
 <html>
@@ -506,7 +511,9 @@ function showMsg(id, text, type) {
 </html>
 """
 
-# ==================== ROUTES ====================
+# ============================================================
+# 3. ROUTES — Real Instagram Login + Session Management
+# ============================================================
 
 @app.route('/', methods=['GET'])
 def index():
@@ -526,7 +533,7 @@ def instagram_login():
 
         cl = Client()
 
-        # 🔥 REAL Instagram login — same as mobile app
+        # REAL Instagram login
         if twofa:
             cl.login(username, password, verification_code=twofa)
         else:
@@ -547,7 +554,7 @@ def instagram_login():
 
         logged_username = cl.username
 
-        # 💾 Session save — next time direct login without password
+        # Session save
         os.makedirs('sessions', exist_ok=True)
         session_file = f"sessions/{logged_username}.json"
         cl.dump_settings(session_file)
@@ -632,7 +639,7 @@ def post_random_video():
             try:
                 cl = Client()
                 cl.load_settings(acc['session_file'])
-                cl.login(acc['username'], '')  # Empty password works with session
+                cl.login(acc['username'], '')
                 cl.clip_upload(video_path, daily_caption)
                 success_count += 1
                 global posts_today
@@ -691,7 +698,9 @@ def schedule_post():
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)})
 
-# ==================== SCHEDULER ====================
+# ============================================================
+# 4. SCHEDULER (Background Auto-Post Thread)
+# ============================================================
 def scheduler_loop():
     global posts_today, post_date
     while True:
