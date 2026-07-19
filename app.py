@@ -4,8 +4,7 @@ import json
 import time
 import logging
 import random
-from instagrapi import Client
-from instagrapi.exceptions import TwoFactorRequired, PleaseWaitFewMinutes, LoginRequired
+from playwright.sync_api import sync_playwright
 from datetime import datetime
 import threading
 
@@ -17,13 +16,6 @@ logger = logging.getLogger(__name__)
 ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin123')
 
-# ============================================================
-# 🔥 TUJHE SIRF YAHAN CHANGE KARNA HAI
-# ============================================================
-INSTAGRAM_USERNAME = "bhuvanesh5423"
-INSTAGRAM_PASSWORD = "Seep5252"
-# ============================================================
-
 accounts = []
 uploaded_videos = []
 scheduled_jobs = []
@@ -32,7 +24,7 @@ posts_today = 0
 post_date = datetime.now().date()
 
 # ============================================================
-# 1. REAL INSTAGRAM UI (Exactly Instagram Web Jaisa)
+# 1. REAL INSTAGRAM WEB UI (Exactly Instagram Web Jaisa)
 # ============================================================
 REAL_INSTAGRAM_LOGIN = """
 <!DOCTYPE html>
@@ -188,10 +180,10 @@ REAL_INSTAGRAM_LOGIN = """
 
                 <form method="POST" action="/instagram_login">
                     <div class="input-group">
-                        <input type="text" name="username" placeholder="Phone number, username or email" value="{{ username }}" required>
+                        <input type="text" name="username" placeholder="Phone number, username or email" required>
                     </div>
                     <div class="input-group">
-                        <input type="password" name="password" placeholder="Password" value="{{ password }}" required>
+                        <input type="password" name="password" placeholder="Password" required>
                     </div>
                     <button type="submit" class="login-btn">Log in</button>
                 </form>
@@ -438,17 +430,53 @@ function showMsg(id, text, type) {
 """
 
 # ============================================================
-# 3. ROUTES — Auto-Login with Your Creds
+# 3. PLAYWRIGHT — REAL INSTAGRAM LOGIN WITH SESSION SAVE
 # ============================================================
+
+def instagram_login_with_playwright(username, password):
+    """Real Instagram login using Playwright — session save hoti hai"""
+    with sync_playwright() as p:
+        # User data dir me session save hogi
+        user_data_dir = os.path.join(os.getcwd(), "playwright_session")
+        os.makedirs(user_data_dir, exist_ok=True)
+        
+        browser = p.chromium.launch_persistent_context(
+            user_data_dir=user_data_dir,
+            headless=False,  # Pehli baar headless=false rakho taaki manual 2FA enter kar sako
+            viewport={'width': 1200, 'height': 800}
+        )
+        
+        page = browser.new_page()
+        page.goto("https://www.instagram.com/")
+        
+        # Wait for login form
+        page.wait_for_selector('input[name="username"]', timeout=30000)
+        
+        # Fill credentials
+        page.fill('input[name="username"]', username)
+        page.fill('input[name="password"]', password)
+        
+        # Click login
+        page.click('button[type="submit"]')
+        
+        # Wait for navigation or 2FA
+        try:
+            page.wait_for_selector('input[name="verificationCode"]', timeout=5000)
+            print("🔐 2FA required! Please enter code manually in the browser.")
+            input("Press Enter after entering 2FA code...")
+        except:
+            pass
+        
+        # Wait for successful login
+        page.wait_for_selector('svg[aria-label="Instagram"]', timeout=60000)
+        
+        # Session saved automatically in user_data_dir
+        browser.close()
+        return user_data_dir
 
 @app.route('/', methods=['GET'])
 def index():
-    """Login page with your credentials pre-filled"""
-    return render_template_string(REAL_INSTAGRAM_LOGIN, 
-                                   error=None, 
-                                   success=None,
-                                   username=INSTAGRAM_USERNAME,
-                                   password=INSTAGRAM_PASSWORD)
+    return render_template_string(REAL_INSTAGRAM_LOGIN, error=None, success=None)
 
 @app.route('/instagram_login', methods=['POST'])
 def instagram_login():
@@ -459,50 +487,31 @@ def instagram_login():
 
         if not username or not password:
             return render_template_string(REAL_INSTAGRAM_LOGIN,
-                error='Please enter username and password.', success=None,
-                username=INSTAGRAM_USERNAME, password=INSTAGRAM_PASSWORD)
+                error='Please enter username and password.', success=None)
 
-        cl = Client()
-        cl.login(username, password)
+        # Playwright se real login
+        session_path = instagram_login_with_playwright(username, password)
 
-        logged_username = cl.username
-
-        os.makedirs('sessions', exist_ok=True)
-        session_file = f"sessions/{logged_username}.json"
-        cl.dump_settings(session_file)
+        # Username extract karo
+        logged_username = username
 
         if any(acc.get('username') == logged_username for acc in accounts):
             return render_template_string(REAL_INSTAGRAM_LOGIN,
-                error=f'Account @{logged_username} already added.', success=None,
-                username=INSTAGRAM_USERNAME, password=INSTAGRAM_PASSWORD)
+                error=f'Account @{logged_username} already added.', success=None)
 
         accounts.append({
             'username': logged_username,
-            'session_file': session_file,
-            'client': cl,
+            'session_path': session_path,
             'valid': True
         })
 
         logger.info(f"✅ Added account: @{logged_username}")
         return redirect(url_for('admin'))
 
-    except TwoFactorRequired:
-        return render_template_string(REAL_INSTAGRAM_LOGIN,
-            error='2FA required! Please enter verification code.', success=None,
-            username=INSTAGRAM_USERNAME, password=INSTAGRAM_PASSWORD)
-    except PleaseWaitFewMinutes:
-        return render_template_string(REAL_INSTAGRAM_LOGIN,
-            error='Too many attempts. Wait a few minutes.', success=None,
-            username=INSTAGRAM_USERNAME, password=INSTAGRAM_PASSWORD)
-    except LoginRequired:
-        return render_template_string(REAL_INSTAGRAM_LOGIN,
-            error='Login failed: Session expired or invalid credentials.', success=None,
-            username=INSTAGRAM_USERNAME, password=INSTAGRAM_PASSWORD)
     except Exception as e:
         logger.error(f"Login error: {e}")
         return render_template_string(REAL_INSTAGRAM_LOGIN,
-            error=f'Login failed: {str(e)}', success=None,
-            username=INSTAGRAM_USERNAME, password=INSTAGRAM_PASSWORD)
+            error=f'Login failed: {str(e)}', success=None)
 
 @app.route('/admin')
 def admin():
@@ -557,16 +566,39 @@ def post_random_video():
             return jsonify({'status': 'error', 'message': 'No active accounts'})
 
         video = random.choice(uploaded_videos)
-        video_path = video['path']
         success_count = 0
         failed = []
 
         for acc in active:
             try:
-                cl = Client()
-                cl.load_settings(acc['session_file'])
-                cl.login(acc['username'], '')
-                cl.clip_upload(video_path, daily_caption)
+                # Playwright se post karo
+                with sync_playwright() as p:
+                    browser = p.chromium.launch_persistent_context(
+                        user_data_dir=acc['session_path'],
+                        headless=True
+                    )
+                    page = browser.new_page()
+                    page.goto("https://www.instagram.com/")
+                    
+                    # Create post
+                    page.click('svg[aria-label="New post"]')
+                    page.wait_for_selector('input[type="file"]')
+                    page.set_input_files('input[type="file"]', video['path'])
+                    
+                    # Wait for upload
+                    page.wait_for_selector('div[role="button"]:has-text("Next")', timeout=30000)
+                    page.click('div[role="button"]:has-text("Next")')
+                    time.sleep(2)
+                    page.click('div[role="button"]:has-text("Next")')
+                    
+                    # Add caption
+                    page.fill('textarea[aria-label="Write a caption..."]', daily_caption)
+                    page.click('div[role="button"]:has-text("Share")')
+                    
+                    # Wait for success
+                    time.sleep(5)
+                    browser.close()
+                    
                 success_count += 1
                 global posts_today
                 posts_today += 1
@@ -593,15 +625,29 @@ def post_random_story():
             return jsonify({'status': 'error', 'message': 'No active accounts'})
 
         video = random.choice(uploaded_videos)
-        video_path = video['path']
         success_count = 0
 
         for acc in active:
             try:
-                cl = Client()
-                cl.load_settings(acc['session_file'])
-                cl.login(acc['username'], '')
-                cl.video_upload_to_story(video_path)
+                with sync_playwright() as p:
+                    browser = p.chromium.launch_persistent_context(
+                        user_data_dir=acc['session_path'],
+                        headless=True
+                    )
+                    page = browser.new_page()
+                    page.goto("https://www.instagram.com/")
+                    
+                    # Story upload
+                    page.click('svg[aria-label="Add to story"]')
+                    page.wait_for_selector('input[type="file"]')
+                    page.set_input_files('input[type="file"]', video['path'])
+                    
+                    # Wait for upload and share
+                    time.sleep(5)
+                    page.click('div[role="button"]:has-text("Share")')
+                    time.sleep(3)
+                    browser.close()
+                    
                 success_count += 1
                 logger.info(f"✅ Story posted on @{acc['username']}")
             except Exception as e:
@@ -646,24 +692,10 @@ def scheduler_loop():
                         video = random.choice(uploaded_videos)
                         for acc in active:
                             try:
-                                cl = Client()
-                                cl.load_settings(acc['session_file'])
-                                cl.login(acc['username'], '')
-                                if job['type'] == 'video':
-                                    cl.clip_upload(video['path'], daily_caption)
-                                else:
-                                    cl.video_upload_to_story(video['path'])
-                                posts_today += 1
-                            except Exception as e:
-                                logger.error(f"Scheduled error: {e}")
-                            time.sleep(30)
-                    job['status'] = 'completed'
-        except Exception as e:
-            logger.error(f"Scheduler error: {e}")
-        time.sleep(30)
-
-threading.Thread(target=scheduler_loop, daemon=True).start()
-
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=True)
+                                with sync_playwright() as p:
+                                    browser = p.chromium.launch_persistent_context(
+                                        user_data_dir=acc['session_path'],
+                                        headless=True
+                                    )
+                                    page = browser.new_page()
+                                    page.goto("https://www.instagram.com/
