@@ -24,14 +24,14 @@ daily_caption = "🎬 New video! Follow for more #instagram #trending"
 posts_today = 0
 post_date = datetime.now().date()
 
-# ==================== INSTAGRAM UI CLONE HTML ====================
+# ==================== INSTAGRAM PROFESSIONAL UI HTML ====================
 INSTAGRAM_LOGIN_UI = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Instagram</title>
+    <title>Instagram Auto Poster</title>
     <style>
         * {
             margin: 0;
@@ -40,101 +40,126 @@ INSTAGRAM_LOGIN_UI = """
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background: #fafafa;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
         }
         .login-container {
             display: flex;
-            max-width: 935px;
+            max-width: 1000px;
             width: 100%;
-            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+        .login-left {
+            flex: 1;
+            padding: 50px 40px;
+            background: linear-gradient(145deg, #f8f9fa, #ffffff);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .login-right {
+            flex: 1;
+            background: linear-gradient(145deg, #667eea, #764ba2);
+            padding: 50px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+        }
+        .login-right h2 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        .login-right p {
+            font-size: 16px;
+            opacity: 0.9;
+            line-height: 1.6;
+            max-width: 350px;
+        }
+        .login-right .icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            background: rgba(255,255,255,0.2);
             padding: 20px;
+            border-radius: 50%;
+            width: 120px;
+            height: 120px;
+            display: flex;
             align-items: center;
             justify-content: center;
-            flex-wrap: wrap;
-        }
-        .phone-preview {
-            flex: 1;
-            min-width: 380px;
-            display: none;
-        }
-        @media (min-width: 875px) {
-            .phone-preview {
-                display: block;
-            }
-        }
-        .phone-preview img {
-            max-width: 100%;
-            height: auto;
-        }
-        .login-box {
-            flex: 0 0 350px;
-            max-width: 350px;
-            width: 100%;
-        }
-        .card {
-            background: white;
-            border: 1px solid #dbdbdb;
-            border-radius: 8px;
-            padding: 40px 30px 30px;
-            margin-bottom: 10px;
-            text-align: center;
         }
         .logo {
             margin-bottom: 30px;
         }
-        .logo svg {
-            width: 175px;
-            height: 51px;
+        .logo h1 {
+            font-size: 32px;
+            background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+        }
+        .logo p {
+            color: #8e8e8e;
+            font-size: 14px;
+            margin-top: 5px;
         }
         .input-group {
-            margin-bottom: 6px;
+            margin-bottom: 12px;
             position: relative;
         }
         .input-group input {
             width: 100%;
-            padding: 9px 8px 7px;
+            padding: 14px 16px;
             background: #fafafa;
-            border: 1px solid #dbdbdb;
-            border-radius: 3px;
-            font-size: 12px;
+            border: 2px solid #dbdbdb;
+            border-radius: 10px;
+            font-size: 14px;
             outline: none;
-            transition: border 0.1s;
-            height: 36px;
+            transition: all 0.3s ease;
         }
         .input-group input:focus {
-            border-color: #a8a8a8;
+            border-color: #0095f6;
             background: white;
+            box-shadow: 0 0 0 4px rgba(0,149,246,0.1);
         }
         .login-btn {
             width: 100%;
-            padding: 8px 0;
-            background: #0095f6;
+            padding: 14px;
+            background: linear-gradient(45deg, #0095f6, #0077cc);
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 10px;
             font-weight: 600;
-            font-size: 14px;
+            font-size: 16px;
             cursor: pointer;
             margin-top: 8px;
-            height: 32px;
-            transition: background 0.2s;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,149,246,0.3);
         }
         .login-btn:hover {
-            background: #1877f2;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,149,246,0.4);
         }
         .login-btn:disabled {
             opacity: 0.7;
             cursor: not-allowed;
+            transform: none;
         }
         .divider {
             display: flex;
             align-items: center;
-            margin: 18px 0;
+            margin: 20px 0;
         }
         .divider-line {
             flex: 1;
@@ -147,62 +172,83 @@ INSTAGRAM_LOGIN_UI = """
             font-size: 13px;
             font-weight: 600;
         }
-        .facebook-login {
+        .social-login {
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 8px;
+            gap: 12px;
             color: #385185;
             font-weight: 600;
             font-size: 14px;
             cursor: pointer;
             text-decoration: none;
-            margin: 8px 0;
+            padding: 10px;
+            border-radius: 10px;
+            transition: background 0.2s;
         }
-        .facebook-login svg {
+        .social-login:hover {
+            background: #f0f2f5;
+        }
+        .social-login svg {
             width: 20px;
             height: 20px;
         }
         .forgot-password {
             color: #00376b;
-            font-size: 12px;
+            font-size: 13px;
             text-decoration: none;
-            margin-top: 12px;
             display: block;
+            text-align: center;
+            margin-top: 12px;
+            transition: color 0.2s;
+        }
+        .forgot-password:hover {
+            color: #0095f6;
         }
         .signup-box {
-            background: white;
-            border: 1px solid #dbdbdb;
-            border-radius: 8px;
-            padding: 20px 30px;
             text-align: center;
             font-size: 14px;
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
         }
         .signup-box a {
             color: #0095f6;
             font-weight: 600;
             text-decoration: none;
         }
+        .signup-box a:hover {
+            text-decoration: underline;
+        }
         .error-msg {
             color: #ed4956;
             font-size: 13px;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             text-align: center;
+            background: #fde8e8;
+            padding: 10px;
+            border-radius: 8px;
         }
         .success-msg {
             color: #28a745;
             font-size: 13px;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             text-align: center;
+            background: #e8f5e9;
+            padding: 10px;
+            border-radius: 8px;
         }
         .loading {
             display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid #fff;
+            width: 18px;
+            height: 18px;
+            border: 3px solid #fff;
             border-radius: 50%;
             border-top-color: transparent;
             animation: spin 0.6s linear infinite;
+            vertical-align: middle;
+            margin-right: 8px;
         }
         @keyframes spin {
             to { transform: rotate(360deg); }
@@ -214,82 +260,107 @@ INSTAGRAM_LOGIN_UI = """
         .twofa-input.show {
             display: block;
         }
-        .meta-links {
-            text-align: center;
-            margin-top: 20px;
+        .twofa-input input {
+            border-color: #ffc107 !important;
         }
-        .meta-links a {
-            color: #8e8e8e;
-            font-size: 11px;
-            text-decoration: none;
-            margin: 0 8px;
+        .twofa-input label {
+            font-size: 12px;
+            color: #856404;
+            margin-bottom: 4px;
+            display: block;
+        }
+        .features {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .features span {
+            font-size: 12px;
+            opacity: 0.8;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        @media (max-width: 768px) {
+            .login-container {
+                flex-direction: column;
+                border-radius: 15px;
+            }
+            .login-left {
+                padding: 30px 25px;
+            }
+            .login-right {
+                padding: 30px 25px;
+                border-radius: 0 0 15px 15px;
+            }
+            .login-right .icon {
+                width: 80px;
+                height: 80px;
+                font-size: 50px;
+            }
+            .login-right h2 {
+                font-size: 24px;
+            }
         }
     </style>
 </head>
 <body>
 <div class="login-container">
-    <div class="phone-preview">
-        <img src="https://www.instagram.com/static/images/homepage/phones/home-phones-2x.png" alt="Instagram preview">
-    </div>
-    <div class="login-box">
-        <div class="card">
-            <div class="logo">
-                <svg viewBox="0 0 175 51" fill="none">
-                    <path d="M53.5 17.5c-1.8 0-3.3.8-4.3 2.1V10h-3.8v25.4h3.8V26c0-2.5 1.5-4.2 4.1-4.2 2.5 0 4 1.7 4 4.2v9.4h3.8V25.8c0-4.5-2.7-8.3-7.6-8.3zm13.9 3.6c-1.8 0-3.4.8-4.4 2.1v-5.2h-3.8v17.4h3.8V29c0-2.5 1.5-4.2 4.1-4.2 2.5 0 4 1.7 4 4.2v9.4h3.8V25.8c0-4.5-2.8-8.3-7.5-8.3zm16.1 0c-3.8 0-6.5 3.1-6.5 7.5s2.7 7.5 6.5 7.5c3.9 0 6.5-3.1 6.5-7.5s-2.6-7.5-6.5-7.5zm0 11.8c-2.1 0-3.6-1.7-3.6-4.3 0-2.6 1.5-4.3 3.6-4.3 2.1 0 3.6 1.7 3.6 4.3 0 2.6-1.5 4.3-3.6 4.3zm12.4-15.4h-3.8V31c0 1.5 1.1 2.5 2.6 2.5h1.2v3.2c-1.2.3-2.2.5-3.4.5-3.6 0-5.2-2.2-5.2-5.4V17.5h-3.8v17.4c0 4.2 2.4 7.2 7.3 7.2 1.5 0 2.9-.3 4.2-.8v-6.8h-1.3c-1.5 0-2.6-1-2.6-2.5V17.5h3.8zm8.3 17.4V10h-3.8v25.4h3.8zm1.2-15.2c0-2.6 1.7-4.3 4.2-4.3 2.5 0 4.1 1.7 4.1 4.3v15.2h3.8V21.2c0-4.5-2.7-8.3-7.5-8.3-1.8 0-3.4.8-4.4 2.1v-5.2h-3.8v17.4h3.8V21.2c0-2.5 1.5-4.2 4.1-4.2 2.5 0 4 1.7 4 4.2v9.4h3.8V21.2h-3.8zM0 25.5C0 11.4 11.4 0 25.5 0S51 11.4 51 25.5 39.6 51 25.5 51 0 39.6 0 25.5z" fill="#0095f6"/>
-                </svg>
-            </div>
-
-            {% if error %}
-            <div class="error-msg">{{ error }}</div>
-            {% endif %}
-            {% if success %}
-            <div class="success-msg">{{ success }}</div>
-            {% endif %}
-
-            <form id="loginForm" method="POST" action="/instagram_login">
-                <div class="input-group">
-                    <input type="text" id="username" name="username" placeholder="Phone number, username, or email" required>
-                </div>
-                <div class="input-group">
-                    <input type="password" id="password" name="password" placeholder="Password" required>
-                </div>
-                <div class="input-group twofa-input" id="twofaGroup">
-                    <input type="text" id="twofa" name="twofa" placeholder="6-digit verification code">
-                </div>
-                <button type="submit" class="login-btn" id="loginBtn">Log in</button>
-            </form>
-
-            <div class="divider">
-                <div class="divider-line"></div>
-                <div class="divider-text">OR</div>
-                <div class="divider-line"></div>
-            </div>
-
-            <a href="#" class="facebook-login">
-                <svg viewBox="0 0 20 20"><path d="M20 10c0-5.5-4.5-10-10-10S0 4.5 0 10c0 5 3.7 9.1 8.4 9.9v-7H5.9V10h2.5V7.8c0-2.5 1.5-3.8 3.7-3.8 1.1 0 2.2.2 2.2.2v2.5h-1.2c-1.2 0-1.6.8-1.6 1.6V10h2.8l-.4 2.9h-2.4v7C16.3 19.1 20 15 20 10z" fill="#1877f2"/></svg>
-                Log in with Facebook
-            </a>
-            <a href="#" class="forgot-password">Forgot password?</a>
+    <div class="login-left">
+        <div class="logo">
+            <h1>📸 AutoPost</h1>
+            <p>Instagram Automation Dashboard</p>
         </div>
+
+        {% if error %}
+        <div class="error-msg">❌ {{ error }}</div>
+        {% endif %}
+        {% if success %}
+        <div class="success-msg">✅ {{ success }}</div>
+        {% endif %}
+
+        <form id="loginForm" method="POST" action="/instagram_login">
+            <div class="input-group">
+                <input type="text" id="username" name="username" placeholder="📱 Phone number, username, or email" required>
+            </div>
+            <div class="input-group">
+                <input type="password" id="password" name="password" placeholder="🔒 Password" required>
+            </div>
+            <div class="input-group twofa-input" id="twofaGroup">
+                <label>🔑 Two-Factor Authentication Code</label>
+                <input type="text" id="twofa" name="twofa" placeholder="Enter 6-digit code">
+            </div>
+            <button type="submit" class="login-btn" id="loginBtn">🚀 Log in</button>
+        </form>
+
+        <div class="divider">
+            <div class="divider-line"></div>
+            <div class="divider-text">OR</div>
+            <div class="divider-line"></div>
+        </div>
+
+        <a href="#" class="social-login">
+            <svg viewBox="0 0 20 20"><path d="M20 10c0-5.5-4.5-10-10-10S0 4.5 0 10c0 5 3.7 9.1 8.4 9.9v-7H5.9V10h2.5V7.8c0-2.5 1.5-3.8 3.7-3.8 1.1 0 2.2.2 2.2.2v2.5h-1.2c-1.2 0-1.6.8-1.6 1.6V10h2.8l-.4 2.9h-2.4v7C16.3 19.1 20 15 20 10z" fill="#1877f2"/></svg>
+            Log in with Facebook
+        </a>
+        <a href="#" class="forgot-password">🔑 Forgot password?</a>
 
         <div class="signup-box">
             Don't have an account? <a href="#">Sign up</a>
         </div>
+    </div>
 
-        <div class="meta-links">
-            <a href="#">Meta</a>
-            <a href="#">About</a>
-            <a href="#">Blog</a>
-            <a href="#">Jobs</a>
-            <a href="#">Help</a>
-            <a href="#">API</a>
-            <a href="#">Privacy</a>
-            <a href="#">Terms</a>
-            <a href="#">Locations</a>
-            <a href="#">Instagram Lite</a>
-            <a href="#">Threads</a>
-            <a href="#">Contact Uploading & Non-Users</a>
-            <a href="#">Meta Verified</a>
+    <div class="login-right">
+        <div class="icon">📸</div>
+        <h2>AutoPost Pro</h2>
+        <p>Manage multiple Instagram accounts, schedule posts, and automate your content strategy — all in one place.</p>
+        <div class="features">
+            <span>✅ Multi-Account</span>
+            <span>⏰ Auto Schedule</span>
+            <span>📊 Analytics</span>
+            <span>🎬 Video & Story</span>
         </div>
     </div>
 </div>
@@ -305,139 +376,85 @@ document.getElementById('loginForm').addEventListener('submit', function(e) {
 </html>
 """
 
-# ==================== ROUTES ====================
-
-@app.route('/', methods=['GET'])
-def index():
-    """Instagram UI clone with login form"""
-    return render_template_string(INSTAGRAM_LOGIN_UI, error=None, success=None)
-
-@app.route('/instagram_login', methods=['POST'])
-def instagram_login():
-    """Real Instagram login using instagrapi"""
-    global accounts
-    try:
-        username = request.form.get('username')
-        password = request.form.get('password')
-        twofa = request.form.get('twofa', '')
-
-        if not username or not password:
-            return render_template_string(INSTAGRAM_LOGIN_UI, 
-                error='Please enter username and password.', success=None)
-
-        cl = Client()
-
-        # 🔥 REAL Instagram login — same as mobile app
-        if twofa:
-            cl.login(username, password, verification_code=twofa)
-        else:
-            try:
-                cl.login(username, password)
-            except TwoFactorRequired:
-                # Show 2FA input
-                return render_template_string(INSTAGRAM_LOGIN_UI, 
-                    error='2FA required! Please enter verification code.', success=None)
-            except PleaseWaitFewMinutes:
-                return render_template_string(INSTAGRAM_LOGIN_UI, 
-                    error='Too many attempts. Wait a few minutes.', success=None)
-            except Exception as e:
-                return render_template_string(INSTAGRAM_LOGIN_UI, 
-                    error=f'Login failed: {str(e)}', success=None)
-
-        logged_username = cl.username
-
-        # 💾 Session save — next time direct login without password
-        os.makedirs('sessions', exist_ok=True)
-        session_file = f"sessions/{logged_username}.json"
-        cl.dump_settings(session_file)
-
-        if any(acc.get('username') == logged_username for acc in accounts):
-            return render_template_string(INSTAGRAM_LOGIN_UI, 
-                error=f'Account @{logged_username} already added.', success=None)
-
-        accounts.append({
-            'username': logged_username,
-            'session_file': session_file,
-            'client': cl,
-            'valid': True
-        })
-
-        logger.info(f"✅ Added account: @{logged_username}")
-        
-        # 🔄 Redirect to admin dashboard
-        return redirect(url_for('admin'))
-
-    except Exception as e:
-        logger.error(f"Login error: {e}")
-        return render_template_string(INSTAGRAM_LOGIN_UI, 
-            error=f'Login failed: {str(e)}', success=None)
-
 # ==================== ADMIN DASHBOARD ====================
-
 ADMIN_HTML = """
 <!DOCTYPE html>
 <html>
 <head><title>Admin Dashboard</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:Arial,sans-serif;background:#fafafa;padding:20px}
-.container{max-width:1000px;margin:0 auto}
-.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;flex-wrap:wrap}
-.header h1{font-size:28px}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;background:#f0f2f5;padding:20px}
+.container{max-width:1200px;margin:0 auto}
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;flex-wrap:wrap;gap:10px}
+.header h1{font-size:28px;display:flex;align-items:center;gap:10px}
 .header h1 span{background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.logout-btn{background:#dc3545;color:white;border:none;padding:8px 20px;border-radius:5px;cursor:pointer}
-.card{background:white;border-radius:12px;padding:24px;margin-bottom:20px;border:1px solid #dbdbdb}
-.card h3{font-size:16px;margin-bottom:12px}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
-.stat-box{background:#f8f9fa;padding:15px;border-radius:8px;text-align:center}
-.stat-box .num{font-size:28px;font-weight:700;color:#0095f6}
-input,textarea{width:100%;padding:10px 12px;border:1px solid #dbdbdb;border-radius:8px;font-size:14px;background:#fafafa}
-button{background:#0095f6;color:white;border:none;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer}
-button:hover{background:#0077cc}
+.header-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.header-actions a{color:#0095f6;text-decoration:none;font-weight:600}
+.logout-btn{background:#dc3545;color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:600;transition:background 0.2s}
+.logout-btn:hover{background:#b02a37}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:15px;margin-bottom:25px}
+.stat-card{background:white;padding:20px;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,0.05);text-align:center;transition:transform 0.2s}
+.stat-card:hover{transform:translateY(-3px)}
+.stat-card .num{font-size:32px;font-weight:700;color:#0095f6}
+.stat-card .label{font-size:13px;color:#8e8e8e;margin-top:4px}
+.card{background:white;border-radius:12px;padding:24px;margin-bottom:20px;box-shadow:0 2px 10px rgba(0,0,0,0.05)}
+.card h3{font-size:16px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+input,textarea,select{width:100%;padding:12px 14px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;background:#fafafa;transition:border 0.2s}
+input:focus,textarea:focus,select:focus{outline:none;border-color:#0095f6;background:white}
+button{background:#0095f6;color:white;border:none;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.2s}
+button:hover{background:#0077cc;transform:translateY(-2px);box-shadow:0 4px 15px rgba(0,149,246,0.3)}
 button.danger{background:#dc3545}
+button.danger:hover{background:#b02a37;box-shadow:0 4px 15px rgba(220,53,69,0.3)}
 button.success{background:#28a745}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+button.success:hover{background:#1e7e34;box-shadow:0 4px 15px rgba(40,167,69,0.3)}
+button.warning{background:#ffc107;color:#212529}
+button.warning:hover{background:#e0a800}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:15px}
 .flex{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.account-item{display:flex;justify-content:space-between;padding:10px 14px;background:#f8f9fa;border-radius:8px;margin-bottom:6px;border-left:4px solid #28a745}
-.msg{padding:10px 14px;border-radius:8px;margin-top:10px}
-.msg.success{background:#e8f5e9;color:#2e7d32}
-.msg.error{background:#fbe9e7;color:#c62828}
-.msg.info{background:#e3f2fd;color:#0d47a1}
+.account-item{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#f8f9fa;border-radius:8px;margin-bottom:8px;border-left:4px solid #28a745}
+.account-item.inactive{border-left-color:#dc3545;opacity:0.6}
+.msg{padding:12px 16px;border-radius:8px;margin-top:10px;font-weight:500}
+.msg.success{background:#d4edda;color:#155724;border:1px solid #c3e6cb}
+.msg.error{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb}
+.msg.info{background:#d1ecf1;color:#0c5460;border:1px solid #bee5eb}
 .hidden{display:none}
 .mt-10{margin-top:10px}
+@media (max-width:600px){.row{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <div class="container">
-<div class="header"><h1>📸 <span>Admin Dashboard</span></h1>
-<a href="/" style="color:#0095f6;text-decoration:none">➕ Add Account</a>
+<div class="header">
+<h1>📸 <span>Admin Dashboard</span></h1>
+<div class="header-actions">
+<a href="/">➕ Add Account</a>
 <form method="POST" action="/logout" style="display:inline"><button class="logout-btn" type="submit">🚪 Logout</button></form>
+</div>
 </div>
 
 <div class="stats">
-<div class="stat-box"><div class="num">{{ accounts|length }}</div><div>Accounts</div></div>
-<div class="stat-box"><div class="num">{{ active_accounts }}</div><div>Active</div></div>
-<div class="stat-box"><div class="num">{{ posts_today }}</div><div>Posts Today</div></div>
-<div class="stat-box"><div class="num">{{ uploaded_videos|length }}</div><div>Videos</div></div>
+<div class="stat-card"><div class="num">{{ accounts|length }}</div><div class="label">Accounts</div></div>
+<div class="stat-card"><div class="num">{{ active_accounts }}</div><div class="label">Active</div></div>
+<div class="stat-card"><div class="num">{{ posts_today }}</div><div class="label">Posts Today</div></div>
+<div class="stat-card"><div class="num">{{ uploaded_videos|length }}</div><div class="label">Videos</div></div>
 </div>
 
-<!-- Account List -->
 <div class="card"><h3>📋 Accounts</h3>
 {% for acc in accounts %}
-<div class="account-item"><span>@{{ acc.username }}</span>
+<div class="account-item {% if not acc.valid %}inactive{% endif %}">
+<span>@{{ acc.username }}</span>
 <span>{% if acc.valid %}✅ Active{% else %}❌ Invalid{% endif %}</span>
-<button class="danger" onclick="removeAccount('{{ acc.username }}')">✕</button></div>
-{% else %}<p>No accounts added. <a href="/">Add one</a></p>{% endfor %}
+<button class="danger" onclick="removeAccount('{{ acc.username }}')">✕</button>
+</div>
+{% else %}<p style="color:#8e8e8e">No accounts added. <a href="/">Add one</a></p>{% endfor %}
 </div>
 
-<!-- Upload Video -->
 <div class="card"><h3>📤 Upload Video</h3>
 <input type="file" id="videoFile" accept="video/*">
-<button class="success" onclick="uploadVideo()">Upload</button>
+<button class="success" onclick="uploadVideo()">📤 Upload</button>
 <div id="uploadMsg" class="hidden"></div>
 </div>
 
-<!-- Post -->
 <div class="card"><h3>📤 Post</h3>
 <div class="flex">
 <button onclick="postRandomVideo()">🎲 Post Video to All</button>
@@ -446,19 +463,17 @@ button.success{background:#28a745}
 <div id="postMsg" class="hidden"></div>
 </div>
 
-<!-- Schedule -->
 <div class="card"><h3>⏰ Schedule</h3>
 <div class="row">
 <div><label>Time</label><input type="time" id="schedTime" value="08:00"></div>
-<div><label>Type</label><select id="schedType"><option value="video">Video</option><option value="story">Story</option></select></div>
+<div><label>Type</label><select id="schedType"><option value="video">Video Post</option><option value="story">Story</option></select></div>
 </div>
-<button onclick="schedulePost()">Schedule</button>
+<button onclick="schedulePost()">⏰ Schedule</button>
 <div id="schedMsg" class="hidden"></div>
 </div>
 
-<!-- Scheduled Jobs -->
 <div class="card"><h3>📅 Scheduled Jobs</h3>
-{% for job in scheduled_jobs %}<div class="account-item"><span>🕐 {{ job.time }} - {{ job.type }}</span><span class="badge">{{ job.status }}</span></div>{% else %}<p>No scheduled jobs</p>{% endfor %}
+{% for job in scheduled_jobs %}<div class="account-item"><span>🕐 {{ job.time }} - {{ job.type }}</span><span>{{ job.status }}</span></div>{% else %}<p style="color:#8e8e8e">No scheduled jobs</p>{% endfor %}
 </div>
 </div>
 
@@ -554,11 +569,71 @@ function showMsg(id, text, type) {
     el.className = 'msg ' + type;
     el.textContent = text;
     el.style.display = 'block';
+    setTimeout(() => { el.style.display = 'none'; }, 5000);
 }
 </script>
 </body>
 </html>
 """
+
+# ==================== ROUTES ====================
+
+@app.route('/', methods=['GET'])
+def index():
+    return render_template_string(INSTAGRAM_LOGIN_UI, error=None, success=None)
+
+@app.route('/instagram_login', methods=['POST'])
+def instagram_login():
+    global accounts
+    try:
+        username = request.form.get('username')
+        password = request.form.get('password')
+        twofa = request.form.get('twofa', '')
+
+        if not username or not password:
+            return render_template_string(INSTAGRAM_LOGIN_UI, 
+                error='Please enter username and password.', success=None)
+
+        cl = Client()
+
+        if twofa:
+            cl.login(username, password, verification_code=twofa)
+        else:
+            try:
+                cl.login(username, password)
+            except TwoFactorRequired:
+                return render_template_string(INSTAGRAM_LOGIN_UI, 
+                    error='2FA required! Please enter verification code.', success=None)
+            except PleaseWaitFewMinutes:
+                return render_template_string(INSTAGRAM_LOGIN_UI, 
+                    error='Too many attempts. Wait a few minutes.', success=None)
+            except Exception as e:
+                return render_template_string(INSTAGRAM_LOGIN_UI, 
+                    error=f'Login failed: {str(e)}', success=None)
+
+        logged_username = cl.username
+        os.makedirs('sessions', exist_ok=True)
+        session_file = f"sessions/{logged_username}.json"
+        cl.dump_settings(session_file)
+
+        if any(acc.get('username') == logged_username for acc in accounts):
+            return render_template_string(INSTAGRAM_LOGIN_UI, 
+                error=f'Account @{logged_username} already added.', success=None)
+
+        accounts.append({
+            'username': logged_username,
+            'session_file': session_file,
+            'client': cl,
+            'valid': True
+        })
+
+        logger.info(f"✅ Added account: @{logged_username}")
+        return redirect(url_for('admin'))
+
+    except Exception as e:
+        logger.error(f"Login error: {e}")
+        return render_template_string(INSTAGRAM_LOGIN_UI, 
+            error=f'Login failed: {str(e)}', success=None)
 
 @app.route('/admin')
 def admin():
@@ -568,8 +643,6 @@ def admin():
     return render_template_string(ADMIN_HTML, accounts=accounts, active_accounts=active,
                                    posts_today=posts_today, uploaded_videos=uploaded_videos,
                                    scheduled_jobs=scheduled_jobs)
-
-# ==================== OTHER ROUTES ====================
 
 @app.route('/logout', methods=['POST'])
 def logout():
