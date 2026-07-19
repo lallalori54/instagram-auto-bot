@@ -17,6 +17,13 @@ logger = logging.getLogger(__name__)
 ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin123')
 
+# ============================================================
+# 🔥 TUJHE SIRF YAHAN CHANGE KARNA HAI
+# ============================================================
+INSTAGRAM_USERNAME = "bhuvanesh5423"
+INSTAGRAM_PASSWORD = "Seep5252"
+# ============================================================
+
 accounts = []
 uploaded_videos = []
 scheduled_jobs = []
@@ -25,11 +32,11 @@ posts_today = 0
 post_date = datetime.now().date()
 
 # ============================================================
-# 1. REAL INSTAGRAM LOGIN UI (Exactly Instagram Web Jaisa)
+# 1. REAL INSTAGRAM UI (Exactly Instagram Web Jaisa)
 # ============================================================
-LOGIN_PAGE = """
+REAL_INSTAGRAM_LOGIN = """
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -46,53 +53,22 @@ LOGIN_PAGE = """
             margin: 0;
             padding: 20px;
         }
-        .container {
-            max-width: 935px;
-            width: 100%;
-            margin: 0 auto;
-        }
-        .content {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 40px;
-            flex-wrap: wrap;
-        }
-        .phone-preview {
-            flex: 0 0 380px;
-            display: none;
-        }
-        @media (min-width: 875px) {
-            .phone-preview {
-                display: block;
-            }
-        }
-        .phone-preview img {
-            width: 100%;
-            height: auto;
-        }
-        .login-box {
-            flex: 0 0 350px;
-            max-width: 350px;
-            width: 100%;
+        .container { max-width: 935px; width: 100%; margin: 0 auto; }
+        .content { display: flex; align-items: center; justify-content: center; gap: 40px; flex-wrap: wrap; }
+        .phone-preview { flex: 0 0 380px; display: none; }
+        @media (min-width: 875px) { .phone-preview { display: block; } }
+        .phone-preview img { width: 100%; height: auto; }
+        .login-box { flex: 0 0 350px; max-width: 350px; width: 100%; }
+        .card {
             background: white;
             border: 1px solid #dbdbdb;
             border-radius: 8px;
             padding: 40px 30px 30px;
             margin-bottom: 10px;
         }
-        .logo {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .logo svg {
-            width: 175px;
-            height: 51px;
-        }
-        .input-group {
-            margin-bottom: 6px;
-            position: relative;
-        }
+        .logo { text-align: center; margin-bottom: 30px; }
+        .logo svg { width: 175px; height: 51px; }
+        .input-group { margin-bottom: 6px; position: relative; }
         .input-group input {
             width: 100%;
             padding: 9px 8px 7px;
@@ -103,10 +79,7 @@ LOGIN_PAGE = """
             outline: none;
             height: 36px;
         }
-        .input-group input:focus {
-            border-color: #a8a8a8;
-            background: white;
-        }
+        .input-group input:focus { border-color: #a8a8a8; background: white; }
         .login-btn {
             width: 100%;
             padding: 8px 0;
@@ -120,29 +93,11 @@ LOGIN_PAGE = """
             margin-top: 8px;
             height: 32px;
         }
-        .login-btn:hover {
-            background: #1877f2;
-        }
-        .login-btn:disabled {
-            opacity: 0.7;
-            cursor: not-allowed;
-        }
-        .divider {
-            display: flex;
-            align-items: center;
-            margin: 18px 0;
-        }
-        .divider-line {
-            flex: 1;
-            height: 1px;
-            background: #dbdbdb;
-        }
-        .divider-text {
-            padding: 0 18px;
-            color: #8e8e8e;
-            font-size: 13px;
-            font-weight: 600;
-        }
+        .login-btn:hover { background: #1877f2; }
+        .login-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+        .divider { display: flex; align-items: center; margin: 18px 0; }
+        .divider-line { flex: 1; height: 1px; background: #dbdbdb; }
+        .divider-text { padding: 0 18px; color: #8e8e8e; font-size: 13px; font-weight: 600; }
         .facebook-login {
             display: flex;
             justify-content: center;
@@ -155,10 +110,7 @@ LOGIN_PAGE = """
             text-decoration: none;
             margin: 8px 0;
         }
-        .facebook-login svg {
-            width: 20px;
-            height: 20px;
-        }
+        .facebook-login svg { width: 20px; height: 20px; }
         .forgot-password {
             color: #00376b;
             font-size: 12px;
@@ -175,11 +127,7 @@ LOGIN_PAGE = """
             text-align: center;
             font-size: 14px;
         }
-        .signup-box a {
-            color: #0095f6;
-            font-weight: 600;
-            text-decoration: none;
-        }
+        .signup-box a { color: #0095f6; font-weight: 600; text-decoration: none; }
         .error-msg {
             color: #ed4956;
             font-size: 13px;
@@ -207,20 +155,8 @@ LOGIN_PAGE = """
             border-top-color: transparent;
             animation: spin 0.6s linear infinite;
         }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        .twofa-input {
-            display: none;
-            margin-top: 8px;
-        }
-        .twofa-input.show {
-            display: block;
-        }
-        .meta-links {
-            text-align: center;
-            margin-top: 20px;
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .meta-links { text-align: center; margin-top: 20px; }
         .meta-links a {
             color: #8e8e8e;
             font-size: 11px;
@@ -235,8 +171,8 @@ LOGIN_PAGE = """
         <div class="phone-preview">
             <img src="https://www.instagram.com/static/images/homepage/phones/home-phones-2x.png" alt="Instagram">
         </div>
-        <div style="flex: 0 0 350px; max-width: 350px; width: 100%;">
-            <div class="login-box">
+        <div class="login-box">
+            <div class="card">
                 <div class="logo">
                     <svg viewBox="0 0 175 51">
                         <path d="M53.5 17.5c-1.8 0-3.3.8-4.3 2.1V10h-3.8v25.4h3.8V26c0-2.5 1.5-4.2 4.1-4.2 2.5 0 4 1.7 4 4.2v9.4h3.8V25.8c0-4.5-2.7-8.3-7.6-8.3zm13.9 3.6c-1.8 0-3.4.8-4.4 2.1v-5.2h-3.8v17.4h3.8V29c0-2.5 1.5-4.2 4.1-4.2 2.5 0 4 1.7 4 4.2v9.4h3.8V25.8c0-4.5-2.8-8.3-7.5-8.3zm16.1 0c-3.8 0-6.5 3.1-6.5 7.5s2.7 7.5 6.5 7.5c3.9 0 6.5-3.1 6.5-7.5s-2.6-7.5-6.5-7.5zm0 11.8c-2.1 0-3.6-1.7-3.6-4.3 0-2.6 1.5-4.3 3.6-4.3 2.1 0 3.6 1.7 3.6 4.3 0 2.6-1.5 4.3-3.6 4.3zm12.4-15.4h-3.8V31c0 1.5 1.1 2.5 2.6 2.5h1.2v3.2c-1.2.3-2.2.5-3.4.5-3.6 0-5.2-2.2-5.2-5.4V17.5h-3.8v17.4c0 4.2 2.4 7.2 7.3 7.2 1.5 0 2.9-.3 4.2-.8v-6.8h-1.3c-1.5 0-2.6-1-2.6-2.5V17.5h3.8zm8.3 17.4V10h-3.8v25.4h3.8zm1.2-15.2c0-2.6 1.7-4.3 4.2-4.3 2.5 0 4.1 1.7 4.1 4.3v15.2h3.8V21.2c0-4.5-2.7-8.3-7.5-8.3-1.8 0-3.4.8-4.4 2.1v-5.2h-3.8v17.4h3.8V21.2c0-2.5 1.5-4.2 4.1-4.2 2.5 0 4 1.7 4 4.2v9.4h3.8V21.2h-3.8zM0 25.5C0 11.4 11.4 0 25.5 0S51 11.4 51 25.5 39.6 51 25.5 51 0 39.6 0 25.5z" fill="#0095f6"/>
@@ -252,15 +188,12 @@ LOGIN_PAGE = """
 
                 <form method="POST" action="/instagram_login">
                     <div class="input-group">
-                        <input type="text" name="username" placeholder="Phone number, username or email" required>
+                        <input type="text" name="username" placeholder="Phone number, username or email" value="{{ username }}" required>
                     </div>
                     <div class="input-group">
-                        <input type="password" name="password" placeholder="Password" required>
+                        <input type="password" name="password" placeholder="Password" value="{{ password }}" required>
                     </div>
-                    <div class="input-group twofa-input" id="twofaGroup">
-                        <input type="text" name="twofa" placeholder="6-digit verification code">
-                    </div>
-                    <button type="submit" class="login-btn" id="loginBtn">Log in</button>
+                    <button type="submit" class="login-btn">Log in</button>
                 </form>
 
                 <div class="divider">
@@ -296,13 +229,6 @@ LOGIN_PAGE = """
         </div>
     </div>
 </div>
-
-<script>
-document.getElementById('loginBtn').addEventListener('click', function() {
-    this.innerHTML = '<span class="loading"></span> Logging in...';
-    this.disabled = true;
-});
-</script>
 </body>
 </html>
 """
@@ -512,12 +438,17 @@ function showMsg(id, text, type) {
 """
 
 # ============================================================
-# 3. ROUTES — Real Instagram Login + Session Management
+# 3. ROUTES — Auto-Login with Your Creds
 # ============================================================
 
 @app.route('/', methods=['GET'])
 def index():
-    return render_template_string(LOGIN_PAGE, error=None, success=None)
+    """Login page with your credentials pre-filled"""
+    return render_template_string(REAL_INSTAGRAM_LOGIN, 
+                                   error=None, 
+                                   success=None,
+                                   username=INSTAGRAM_USERNAME,
+                                   password=INSTAGRAM_PASSWORD)
 
 @app.route('/instagram_login', methods=['POST'])
 def instagram_login():
@@ -525,43 +456,25 @@ def instagram_login():
     try:
         username = request.form.get('username')
         password = request.form.get('password')
-        twofa = request.form.get('twofa', '')
 
         if not username or not password:
-            return render_template_string(LOGIN_PAGE,
-                error='Please enter username and password.', success=None)
+            return render_template_string(REAL_INSTAGRAM_LOGIN,
+                error='Please enter username and password.', success=None,
+                username=INSTAGRAM_USERNAME, password=INSTAGRAM_PASSWORD)
 
         cl = Client()
-
-        # REAL Instagram login
-        if twofa:
-            cl.login(username, password, verification_code=twofa)
-        else:
-            try:
-                cl.login(username, password)
-            except TwoFactorRequired:
-                return render_template_string(LOGIN_PAGE,
-                    error='2FA required! Please enter verification code.', success=None)
-            except PleaseWaitFewMinutes:
-                return render_template_string(LOGIN_PAGE,
-                    error='Too many attempts. Wait a few minutes.', success=None)
-            except LoginRequired as e:
-                return render_template_string(LOGIN_PAGE,
-                    error=f'Login failed: Session expired or invalid credentials.', success=None)
-            except Exception as e:
-                return render_template_string(LOGIN_PAGE,
-                    error=f'Login failed: {str(e)}', success=None)
+        cl.login(username, password)
 
         logged_username = cl.username
 
-        # Session save
         os.makedirs('sessions', exist_ok=True)
         session_file = f"sessions/{logged_username}.json"
         cl.dump_settings(session_file)
 
         if any(acc.get('username') == logged_username for acc in accounts):
-            return render_template_string(LOGIN_PAGE,
-                error=f'Account @{logged_username} already added.', success=None)
+            return render_template_string(REAL_INSTAGRAM_LOGIN,
+                error=f'Account @{logged_username} already added.', success=None,
+                username=INSTAGRAM_USERNAME, password=INSTAGRAM_PASSWORD)
 
         accounts.append({
             'username': logged_username,
@@ -573,10 +486,23 @@ def instagram_login():
         logger.info(f"✅ Added account: @{logged_username}")
         return redirect(url_for('admin'))
 
+    except TwoFactorRequired:
+        return render_template_string(REAL_INSTAGRAM_LOGIN,
+            error='2FA required! Please enter verification code.', success=None,
+            username=INSTAGRAM_USERNAME, password=INSTAGRAM_PASSWORD)
+    except PleaseWaitFewMinutes:
+        return render_template_string(REAL_INSTAGRAM_LOGIN,
+            error='Too many attempts. Wait a few minutes.', success=None,
+            username=INSTAGRAM_USERNAME, password=INSTAGRAM_PASSWORD)
+    except LoginRequired:
+        return render_template_string(REAL_INSTAGRAM_LOGIN,
+            error='Login failed: Session expired or invalid credentials.', success=None,
+            username=INSTAGRAM_USERNAME, password=INSTAGRAM_PASSWORD)
     except Exception as e:
         logger.error(f"Login error: {e}")
-        return render_template_string(LOGIN_PAGE,
-            error=f'Login failed: {str(e)}', success=None)
+        return render_template_string(REAL_INSTAGRAM_LOGIN,
+            error=f'Login failed: {str(e)}', success=None,
+            username=INSTAGRAM_USERNAME, password=INSTAGRAM_PASSWORD)
 
 @app.route('/admin')
 def admin():
@@ -699,7 +625,7 @@ def schedule_post():
         return jsonify({'status': 'error', 'message': str(e)})
 
 # ============================================================
-# 4. SCHEDULER (Background Auto-Post Thread)
+# 4. SCHEDULER
 # ============================================================
 def scheduler_loop():
     global posts_today, post_date
